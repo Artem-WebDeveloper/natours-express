@@ -10,14 +10,9 @@ const DB = process.env.DATABASE.replace(
 );
 
 mongoose.connect(DB).then((con) => {
-  console.log(con.connections);
-});
-
-/* mongoose.connect(process.env.DATABASE_LOCAL).then(async (con) => {
+  console.log('DB connection successfull!');
   // console.log(con.connections);
-  const collections = await con.connection.db.listCollections().toArray();
-  console.log(collections.map((c) => c.name));
-}); */
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
