@@ -2,8 +2,46 @@ const Tour = require('../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // СОЗДАЕМ ЗАПРОС
+    // 1A. Фильтрация
+    const queryObj = { ...req.query };
+    const exludedFields = ['page', 'sort', 'limit', 'fields'];
+    exludedFields.forEach((el) => delete queryObj[el]);
 
+    // 1B. Расширенная фильтрация
+    // { difficulty: 'easy', duration: { gte: '5' } } заменить на
+    // { difficulty: 'easy', duration: { $gte: 5 } }
+    // gte, gt, lte, lt
+
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // Еще один способ фильтрации Mongoose
+    // const query = await Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+
+    // 2. Сортировка
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+      // sort('price ratingAverage')
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // 3. Ограничение полей
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    // ВЫПОЛНЯЕМ ЗАПРОС
+    const tours = await query;
+
+    // ОТПРАВИТЬ ОТВЕТ
     res.status(200).json({
       status: 'success',
       requestedAt: req.requestTime,

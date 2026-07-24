@@ -25,6 +25,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.set('query parser', 'extended');
+
 //! 2. ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
