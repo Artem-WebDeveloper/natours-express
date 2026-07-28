@@ -1,5 +1,21 @@
 const Tour = require('../models/tourModel');
 
+// Псевдонимный маршрут
+exports.aliasTopTours = (req, res, next) => {
+  Object.defineProperty(req, 'query', {
+    value: {
+      ...req.query,
+      limit: '5',
+      sort: '-ratingsAverage,price',
+      fields: 'name,price,ratingsAverage,difficulty',
+    },
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+  next();
+};
+
 exports.getAllTours = async (req, res) => {
   try {
     // СОЗДАЕМ ЗАПРОС
@@ -36,6 +52,19 @@ exports.getAllTours = async (req, res) => {
       query = query.select(fields);
     } else {
       query = query.select('-__v');
+    }
+
+    // 4. Пагинация
+    // пример - page=2&limit=10
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error('This page does not exist');
     }
 
     // ВЫПОЛНЯЕМ ЗАПРОС
