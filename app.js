@@ -19,16 +19,29 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Ограничение количество запросов от одного и того IP
+// Ограничение количество запросов от одного IP
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please tru again in an hour',
+  message: 'Too many requests from this IP, please try again in an hour',
 });
 app.use('/api', limiter);
 
 // Body парсер, читающий данные из body в body.req
 app.use(express.json({ limit: '10kb' }));
+
+// Sanitization данных против NoSQL query injection
+// express-mongo-sanitize:
+// deprecated/outdated; также несовместим с Express 5 req.query
+// app.use(mongoSanitize());
+
+// xss-clean:
+// package deprecated/unmaintained
+// app.use(xss());
+
+// Предотвратить загрязнение запросов
+// package deprecated/unmaintained
+// app.use(hpp({ whitelist: ['duration', 'ratingsQuanity', 'ratingsAverage', 'maxGroupSize', 'difficulty', 'price'] }));
 
 // Обслуживание статических файлов
 app.use(express.static(`${__dirname}/public`));
